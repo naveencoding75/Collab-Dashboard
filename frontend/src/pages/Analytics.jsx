@@ -8,8 +8,12 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar 
 } from 'recharts';
 
-// Initialize socket outside component
-const socket = io('http://localhost:5000'); 
+// --- DEPLOYMENT FIX: Dynamic Socket URL ---
+// 1. Check if we are in production (Vercel)
+// 2. If yes, use the Render Backend URL
+// 3. If no, use localhost
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const socket = io(API_URL); 
 
 const Analytics = () => {
   const { id } = useParams();
@@ -59,7 +63,7 @@ const Analytics = () => {
         }));
       });
 
-      // --- FIX: GLOBAL MOUSE TRACKING WITH VIEWPORT COORDINATES ---
+      // --- GLOBAL MOUSE TRACKING ---
       const handleWindowMouseMove = (e) => {
         // Throttle updates slightly (every 50ms)
         const now = Date.now();
@@ -71,14 +75,13 @@ const Analytics = () => {
           socketId: socket.id,
           username: user.username,
           color: user.color || '#3b82f6',
-          // FIX: Use clientX/Y (Viewport) instead of pageX/Y (Document)
-          // This matches the 'position: fixed' style of LiveCursors
+          // Use clientX/Y for viewport-relative coordinates
           x: e.clientX, 
           y: e.clientY
         });
       };
 
-      // Attach to window to track mouse everywhere, not just inside the chart
+      // Attach to window to track mouse everywhere
       window.addEventListener('mousemove', handleWindowMouseMove);
       
       return () => {
@@ -151,6 +154,7 @@ const Analytics = () => {
         </div>
 
         {/* Chart Area */}
+        {/* Uses inline style to ensure chart size is calculated before render */}
         <div className="bg-white p-6 rounded-lg shadow-sm w-full block" style={{ height: 500, minHeight: 500, minWidth: 0 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>

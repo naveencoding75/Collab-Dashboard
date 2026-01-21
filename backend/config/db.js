@@ -21,8 +21,15 @@ const sequelize = new Sequelize(
   process.env.MYSQL_PASSWORD,
   {
     host: process.env.MYSQL_HOST,
+    port: process.env.MYSQL_PORT || 3306, // <--- Add this line!
     dialect: 'mysql',
-    logging: false, // Turn off SQL logging in console to keep it clean
+    logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    }
   }
 );
 
